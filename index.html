@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>ONX · OWNER PANEL</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="firebase-by-onedev.js"></script>
+    
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-primary: #0a0c12;
+            --bg-secondary: #111318;
+            --bg-card: #16181f;
+            --border: #252a33;
+            --border-light: #1e2229;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent: #2a85ff;
+            --accent-glow: rgba(42,133,255,0.2);
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --purple: #8b5cf6;
+            --card-radius: 20px;
+        }
+        /* Matikan highlight saat tap di WebView Android */
+* {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+}
+
+/* Matikan outline saat focus */
+*:focus {
+    outline: none !important;
+}
+
+/* Matikan efek abu-abu di WebView */
+button, 
+.btn, 
+.nav-item, 
+.menu-dots,
+.toggle-btn,
+[onclick] {
+    -webkit-tap-highlight-color: transparent !important;
+    background: transparent;
+}
+
+/* Matikan highlight biru di input */
+input, textarea, select {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-appearance: none;
+    appearance: none;
+}
+        
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            padding: 16px 16px 90px 16px;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .logo h1 {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .logo p {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .badge-owner {
+            background: var(--accent);
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        /* Server Status */
+        .server-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--card-radius);
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .status-dot.offline { background: var(--danger); }
+        .status-dot.maintenance { background: var(--warning); }
+        .status-text .label { font-size: 10px; color: var(--text-muted); }
+        .status-text .value { font-size: 14px; font-weight: 700; }
+        .server-toggle {
+            display: flex;
+            gap: 6px;
+            background: var(--bg-secondary);
+            padding: 4px;
+            border-radius: 40px;
+        }
+        .toggle-btn {
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 600;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        .toggle-btn.active { background: var(--success); color: white; }
+        .toggle-btn.off.active { background: var(--danger); }
+        .toggle-btn.maint.active { background: var(--warning); }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px;
+            text-align: center;
+        }
+        .stat-card i { font-size: 22px; color: var(--accent); margin-bottom: 6px; display: block; }
+        .stat-card .value { font-size: 22px; font-weight: 700; }
+        .stat-card .label { font-size: 10px; color: var(--text-muted); margin-top: 4px; }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(17, 19, 24, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 16px 20px;
+            z-index: 100;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+        .nav-item i { font-size: 20px; }
+        .nav-item.active { color: var(--accent); background: var(--accent-glow); }
+        
+        /* Tab Panes */
+        .tab-pane { display: none; padding-bottom: 20px; }
+        .tab-pane.active-pane { display: block; animation: fadeIn 0.25s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--card-radius);
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 3px solid var(--accent);
+            padding-left: 12px;
+        }
+        
+        /* Form Elements */
+        .input-group { margin-bottom: 14px; }
+        .input-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: block;
+        }
+        .input-field, .duration-select {
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 14px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+        .input-field:focus, .duration-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .duration-group { display: flex; gap: 10px; }
+        .duration-group input { flex: 1; }
+        .duration-group select { width: 100px; }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: linear-gradient(135deg, var(--accent), #0066cc);
+            color: white;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-danger { background: linear-gradient(135deg, var(--danger), #b91c1c); }
+        .btn-warning { background: linear-gradient(135deg, var(--warning), #d97706); }
+        
+        /* Lists */
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .search-box { margin-bottom: 14px; }
+        .search-input {
+            width: 100%;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 10px 16px;
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+        .list-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+        .list-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .item-info { flex: 1; }
+        .item-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+        .item-detail { font-size: 10px; color: var(--text-muted); display: flex; gap: 10px; flex-wrap: wrap; }
+        .item-badge {
+            font-size: 9px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 6px;
+        }
+        .item-badge.success { background: rgba(16,185,129,0.15); color: var(--success); }
+        .item-badge.danger { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .item-badge.warning { background: rgba(245,158,11,0.15); color: var(--warning); }
+        
+        .action-menu { position: relative; }
+        .menu-dots {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 18px;
+            padding: 8px 10px;
+            cursor: pointer;
+        }
+        .dropdown-menu {
+            position: absolute;
+            right: 0;
+            top: 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            min-width: 150px;
+            z-index: 100;
+            display: none;
+        }
+        .dropdown-menu.show { display: block; }
+        .dropdown-item {
+            padding: 10px 14px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .dropdown-item:hover { background: var(--bg-secondary); color: var(--accent); }
+        .dropdown-item.danger:hover { color: var(--danger); }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card);
+            border: 1px solid var(--accent);
+            border-radius: 40px;
+            padding: 12px 24px;
+            font-size: 13px;
+            z-index: 200;
+            display: none;
+            white-space: nowrap;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .switch-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--danger);
+            transition: 0.3s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--success); }
+        input:checked + .slider:before { transform: translateX(24px); }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        @media (max-width: 480px) {
+            body { padding: 12px 12px 80px 12px; }
+            .stats-grid { gap: 8px; }
+            .stat-card { padding: 10px; }
+            .stat-card .value { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" style="max-width: 600px; margin: 0 auto;">
+    
+    <!-- HEADER -->
+    <div class="header">
+        <div class="logo">
+            <h1>ONX · OWNER</h1>
+            <p>Super Administrator Panel</p>
+        </div>
+        <div class="badge-owner">OWNER</div>
+    </div>
+    
+    <!-- SERVER STATUS -->
+    <div class="server-card">
+        <div class="status-indicator">
+            <div class="status-dot online" id="serverDot"></div>
+            <div class="status-text">
+                <div class="label">SERVER STATUS</div>
+                <div class="value" id="serverStatusText">ONLINE</div>
+            </div>
+        </div>
+        <div class="server-toggle">
+            <button class="toggle-btn on active" id="serverOnBtn" onclick="setServerStatus('online')">ON</button>
+            <button class="toggle-btn off" id="serverOffBtn" onclick="setServerStatus('offline')">OFF</button>
+            <button class="toggle-btn maint" id="serverMaintBtn" onclick="setServerStatus('maintenance')">MAINT</button>
+        </div>
+    </div>
+    
+    <!-- STATS GRID -->
+    <div class="stats-grid">
+        <div class="stat-card"><i class="fas fa-users"></i><div class="value" id="statReseller">0</div><div class="label">RESELLER</div></div>
+        <div class="stat-card"><i class="fas fa-user-check"></i><div class="value" id="statBuyer">0</div><div class="label">BUYER</div></div>
+        <div class="stat-card"><i class="fas fa-flag"></i><div class="value" id="statReport">0</div><div class="label">REPORT</div></div>
+    </div>
+    
+    <!-- BOTTOM NAVIGATION -->
+    <div class="bottom-nav">
+        <button class="nav-item active" data-tab="tabReseller"><i class="fas fa-store"></i><span>RESELLER</span></button>
+        <button class="nav-item" data-tab="tabBuyer"><i class="fas fa-user-plus"></i><span>BUYER</span></button>
+        <button class="nav-item" data-tab="tabPhishing"><i class="fas fa-database"></i><span>PHISHING</span></button>
+        <button class="nav-item" data-tab="tabAnnounce"><i class="fas fa-bullhorn"></i><span>ANNOUNCE</span></button>
+        <button class="nav-item" data-tab="tabReport"><i class="fas fa-flag"></i><span>REPORT</span></button>
+    </div>
+    
+    <!-- TAB 1: RESELLER MANAGEMENT -->
+    <div id="tabReseller" class="tab-pane active-pane">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-user-plus"></i> TAMBAH RESELLER</div>
+            <div class="input-group"><label class="input-label">USERNAME</label><input type="text" id="resellerUsername" class="input-field" placeholder="Username reseller"></div>
+            <div class="input-group"><label class="input-label">PASSWORD</label><input type="text" id="resellerPassword" class="input-field" placeholder="Password"></div>
+            <div class="input-group"><label class="input-label">KOMISI (%)</label><input type="number" id="resellerCommission" class="input-field" value="10" min="0" max="100"></div>
+            <div class="switch-group"><span class="input-label">1 IP/DEVICE LOCK</span><label class="switch"><input type="checkbox" id="resellerLockDevice" checked><span class="slider"></span></label></div>
+            <div class="switch-group"><span class="input-label">AKTIF</span><label class="switch"><input type="checkbox" id="resellerActive" checked><span class="slider"></span></label></div>
+            <button class="btn" onclick="createReseller()"><i class="fas fa-save"></i> SIMPAN RESELLER</button>
+        </div>
+        
+        <div class="card">
+            <div class="list-header"><span class="card-title" style="border-left: none; padding-left: 0;"><i class="fas fa-list"></i> DAFTAR RESELLER</span><span class="item-badge success" id="resellerCount">0</span></div>
+            <div class="search-box"><input type="text" id="searchReseller" class="search-input" placeholder="Cari reseller..."></div>
+            <div id="resellerList" class="list-items"><div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> Memuat...</div></div>
+        </div>
+    </div>
+    
+    <!-- TAB 2: BUYER MANAGEMENT -->
+    <div id="tabBuyer" class="tab-pane">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-key"></i> GENERATE BUYER ACCESS</div>
+            <div class="input-group"><label class="input-label">USERNAME</label><input type="text" id="buyerUsername" class="input-field" placeholder="Username buyer"></div>
+            <div class="input-group"><label class="input-label">PASSWORD</label><input type="text" id="buyerPassword" class="input-field" placeholder="Password"></div>
+            <div class="input-group"><label class="input-label">DURASI</label><div class="duration-group"><input type="number" id="durasiNilai" class="input-field" value="1" min="1"><select id="durasiUnit" class="duration-select"><option value="1">JAM</option><option value="24">HARI</option></select></div></div>
+            <button class="btn" onclick="createBuyer()"><i class="fas fa-download"></i> CREATE ACCESS</button>
+        </div>
+        
+        <div class="card">
+            <div class="list-header"><span class="card-title" style="border-left: none; padding-left: 0;"><i class="fas fa-database"></i> DATABASE BUYER</span><span class="item-badge success" id="buyerCount">0</span></div>
+            <div class="search-box"><input type="text" id="searchBuyer" class="search-input" placeholder="Cari buyer..."></div>
+            <div id="buyerList" class="list-items"><div class="empty-state"><i class="fas fa-spinner fa-pulse"></i> Memuat...</div></div>
+        </div>
+    </div>
+    
+    <!-- TAB 3: PHISHING DATA -->
+    <div id="tabPhishing" class="tab-pane">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-database"></i> DATA PHISHING TERKIRIM</div>
+            <div id="phishingList" class="list-items"><div class="empty-state"><i class="fas fa-inbox"></i> Belum ada data phishing</div></div>
+        </div>
+    </div>
+    
+    <!-- TAB 4: ANNOUNCEMENT -->
+    <div id="tabAnnounce" class="tab-pane">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-bullhorn"></i> BUAT PENGUMUMAN</div>
+            <div class="input-group"><label class="input-label">TEKS PENGUMUMAN</label><textarea id="announceText" class="input-field" rows="3" placeholder="Tulis pengumuman..."></textarea></div>
+            <div class="input-group"><label class="input-label">AUTO HAPUS PADA</label><input type="datetime-local" id="announceExpiry" class="input-field"></div>
+            <button class="btn" onclick="publishAnnouncement()"><i class="fas fa-paper-plane"></i> PUBLISH</button>
+        </div>
+        <div class="card">
+            <div class="card-title"><i class="fas fa-list"></i> PENGUMUMAN AKTIF</div>
+            <div id="announceList" class="list-items"><div class="empty-state"><i class="fas fa-inbox"></i> Tidak ada pengumuman</div></div>
+        </div>
+    </div>
+    
+    <!-- TAB 5: REPORT -->
+    <div id="tabReport" class="tab-pane">
+        <div class="card">
+            <div class="card-title"><i class="fas fa-flag"></i> LAPORAN MASUK</div>
+            <div id="reportList" class="list-items"><div class="empty-state"><i class="fas fa-inbox"></i> Belum ada laporan</div></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODALS -->
+<div id="modalReportReply" class="modal-overlay">
+    <div class="modal-card">
+        <div class="card-title">BALAS LAPORAN</div>
+        <div class="input-group"><label class="input-label">PESAN BALASAN</label><textarea id="replyMessage" class="input-field" rows="3" placeholder="Tulis balasan..."></textarea></div>
+        <button class="btn" onclick="sendReply()" style="margin-bottom: 8px;">KIRIM BALASAN</button>
+        <button class="btn btn-danger" onclick="closeReportModal()">TUTUP</button>
+    </div>
+</div>
+
+<div id="modalResellerDetail" class="modal-overlay">
+    <div class="modal-card">
+        <div class="card-title">DETAIL RESELLER</div>
+        <div id="resellerDetailContent"></div>
+        <button class="btn btn-warning" onclick="resetResellerDevice()" style="margin-top: 10px;">RESET DEVICE LOCK</button>
+        <button class="btn" onclick="closeDetailModal()" style="margin-top: 8px;">TUTUP</button>
+    </div>
+</div>
+
+<div class="notification" id="notification"></div>
+
+<script>
+    // Firebase sudah diinisialisasi dari firebase-by-onedev.js
+    let currentReportId = null;
+    let currentDetailReseller = null;
+    let allResellers = {};
+    let allBuyers = {};
+    
+    // Helper
+    function showNotification(msg, isError = false) {
+        const n = document.getElementById('notification');
+        if (!n) return;
+        n.style.borderColor = isError ? 'var(--danger)' : 'var(--success)';
+        n.style.color = isError ? 'var(--danger)' : 'var(--success)';
+        n.textContent = msg;
+        n.style.display = 'block';
+        setTimeout(() => { n.style.display = 'none'; }, 3000);
+    }
+    
+    function formatDate(ts) {
+        if (!ts) return '-';
+        let d = new Date(ts);
+        if (isNaN(d.getTime())) return '-';
+        return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // ========== SERVER STATUS ==========
+    let serverStatus = 'online';
+    function loadServerStatus() {
+        if (!db) return;
+        db.ref('server_status').on('value', (snap) => {
+            let data = snap.val();
+            serverStatus = data?.status || 'online';
+            updateServerUI();
+        });
+    }
+    function setServerStatus(status) {
+        if (!db) return;
+        serverStatus = status;
+        db.ref('server_status').set({ status: status, lastUpdated: Date.now(), updatedBy: 'owner' });
+        updateServerUI();
+        showNotification(`Server ${status.toUpperCase()}`);
+    }
+    function updateServerUI() {
+        let dot = document.getElementById('serverDot');
+        let txt = document.getElementById('serverStatusText');
+        let onBtn = document.getElementById('serverOnBtn');
+        let offBtn = document.getElementById('serverOffBtn');
+        let maintBtn = document.getElementById('serverMaintBtn');
+        if (dot) dot.className = 'status-dot ' + serverStatus;
+        if (txt) txt.textContent = serverStatus.toUpperCase();
+        if (onBtn) onBtn.classList.remove('active');
+        if (offBtn) offBtn.classList.remove('active');
+        if (maintBtn) maintBtn.classList.remove('active');
+        if (serverStatus === 'online') onBtn?.classList.add('active');
+        else if (serverStatus === 'offline') offBtn?.classList.add('active');
+        else maintBtn?.classList.add('active');
+    }
+    
+    // ========== RESELLER CRUD (Reseller_onx) ==========
+    function createReseller() {
+        let username = document.getElementById('resellerUsername').value.trim().toLowerCase();
+        let password = document.getElementById('resellerPassword').value.trim();
+        let commission = parseInt(document.getElementById('resellerCommission').value);
+        let lockDevice = document.getElementById('resellerLockDevice').checked;
+        let isActive = document.getElementById('resellerActive').checked;
+        
+        if (!username || !password) return showNotification('Isi username dan password!', true);
+        if (username.length < 3) return showNotification('Username minimal 3 karakter!', true);
+        
+        db.ref('Reseller_onx/' + username).once('value').then(snap => {
+            if (snap.exists()) return showNotification('Username sudah ada!', true);
+            db.ref('Reseller_onx/' + username).set({
+                password: password,
+                commission: commission,
+                lockDevice: lockDevice,
+                isActive: isActive,
+                createdAt: Date.now(),
+                createdBy: 'owner',
+                totalSales: 0,
+                balance: 0,
+                registeredIP: null,
+                lastLogin: null
+            }).then(() => {
+                showNotification(`Reseller ${username} berhasil dibuat!`);
+                document.getElementById('resellerUsername').value = '';
+                document.getElementById('resellerPassword').value = '';
+                loadResellers();
+            }).catch(e => showNotification('Error: ' + e.message, true));
+        });
+    }
+    
+    function loadResellers() {
+        if (!db) return;
+        db.ref('Reseller_onx').on('value', (snap) => {
+            allResellers = snap.val() || {};
+            document.getElementById('statReseller').textContent = Object.keys(allResellers).length;
+            document.getElementById('resellerCount').textContent = Object.keys(allResellers).length;
+            renderResellers();
+        });
+    }
+    
+    function renderResellers() {
+        let container = document.getElementById('resellerList');
+        let searchVal = document.getElementById('searchReseller')?.value.toLowerCase() || '';
+        let keys = Object.keys(allResellers).filter(r => r.includes(searchVal));
+        
+        if (keys.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-store"></i> Tidak ada reseller</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        keys.forEach(username => {
+            let r = allResellers[username];
+            let isActive = r.isActive !== false;
+            let div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `
+                <div class="item-info">
+                    <div class="item-name">${escapeHtml(username)}<span class="item-badge ${isActive ? 'success' : 'danger'}">${isActive ? 'AKTIF' : 'NONAKTIF'}</span></div>
+                    <div class="item-detail"><i class="fas fa-percent"></i> Komisi: ${r.commission || 0}% | <i class="fas fa-chart-line"></i> Sales: ${r.totalSales || 0}</div>
+                </div>
+                <div class="action-menu">
+                    <button class="menu-dots" onclick="event.stopPropagation();toggleResellerMenu(this, '${username}')"><i class="fas fa-ellipsis-v"></i></button>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" onclick="showResellerDetail('${username}')"><i class="fas fa-info-circle"></i> Detail</div>
+                        <div class="dropdown-item" onclick="resetResellerPass('${username}')"><i class="fas fa-key"></i> Reset Password</div>
+                        <div class="dropdown-item" onclick="editReseller('${username}')"><i class="fas fa-edit"></i> Edit</div>
+                        <div class="dropdown-item danger" onclick="deleteReseller('${username}')"><i class="fas fa-trash"></i> Hapus</div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+    
+    function toggleResellerMenu(btn, username) {
+        let dropdown = btn.nextElementSibling;
+        document.querySelectorAll('.dropdown-menu').forEach(m => { if (m !== dropdown) m.classList.remove('show'); });
+        dropdown.classList.toggle('show');
+        document.addEventListener('click', function onClickOutside(e) {
+            if (!btn.contains(e.target) && dropdown && !dropdown.contains(e.target)) {
+                dropdown.classList.remove('show');
+                document.removeEventListener('click', onClickOutside);
+            }
+        });
+    }
+    
+    function showResellerDetail(username) {
+        currentDetailReseller = username;
+        let r = allResellers[username];
+        if (!r) return;
+        document.getElementById('resellerDetailContent').innerHTML = `
+            <div class="detail-row"><span>Username</span><span>${escapeHtml(username)}</span></div>
+            <div class="detail-row"><span>Komisi</span><span>${r.commission || 0}%</span></div>
+            <div class="detail-row"><span>Status</span><span>${r.isActive !== false ? 'AKTIF' : 'NONAKTIF'}</span></div>
+            <div class="detail-row"><span>Total Sales</span><span>${r.totalSales || 0}</span></div>
+            <div class="detail-row"><span>Saldo</span><span>${r.balance || 0}</span></div>
+            <div class="detail-row"><span>Terakhir Login</span><span>${formatDate(r.lastLogin)}</span></div>
+            <div class="detail-row"><span>Dibuat</span><span>${formatDate(r.createdAt)}</span></div>
+        `;
+        document.getElementById('modalResellerDetail').style.display = 'flex';
+    }
+    
+    function resetResellerPass(username) {
+        let newPass = prompt('Password baru untuk ' + username);
+        if (newPass && newPass.trim()) {
+            db.ref('Reseller_onx/' + username).update({ password: newPass.trim() }).then(() => {
+                showNotification(`Password ${username} direset!`);
+            });
+        }
+    }
+    
+    function resetResellerDevice() {
+        if (currentDetailReseller) {
+            db.ref('Reseller_onx/' + currentDetailReseller).update({ registeredIP: null, securityWarning: false }).then(() => {
+                showNotification('Device lock direset!');
+                closeDetailModal();
+            });
+        }
+    }
+    
+    function editReseller(username) {
+        let r = allResellers[username];
+        let newCommission = prompt('Komisi baru (%)', r.commission || 10);
+        let newStatus = confirm('Aktifkan reseller? (OK = Aktif, Cancel = Nonaktif)');
+        let updates = {};
+        if (newCommission) updates.commission = parseInt(newCommission);
+        updates.isActive = newStatus;
+        db.ref('Reseller_onx/' + username).update(updates).then(() => {
+            showNotification(`Reseller ${username} diupdate!`);
+        });
+    }
+    
+    function deleteReseller(username) {
+        if (confirm(`Hapus reseller ${username}?`)) {
+            db.ref('Reseller_onx/' + username).remove().then(() => {
+                showNotification(`Reseller ${username} dihapus!`);
+                loadResellers();
+            });
+        }
+    }
+    
+    function closeDetailModal() {
+        document.getElementById('modalResellerDetail').style.display = 'none';
+        currentDetailReseller = null;
+    }
+    
+    // ========== BUYER MANAGEMENT (registered_users) ==========
+    function createBuyer() {
+        let username = document.getElementById('buyerUsername').value.trim().toLowerCase();
+        let password = document.getElementById('buyerPassword').value.trim();
+        let durasiNilai = parseInt(document.getElementById('durasiNilai').value);
+        let durasiUnit = parseInt(document.getElementById('durasiUnit').value);
+        
+        if (!username || !password) return showNotification('Isi username dan password!', true);
+        let expiry = Date.now() + (durasiNilai * durasiUnit * 60 * 60 * 1000);
+        
+        db.ref('registered_users/' + username).once('value').then(snap => {
+            if (snap.exists()) return showNotification('Username sudah ada!', true);
+            db.ref('registered_users/' + username).set({
+                password: password,
+                expiry: expiry,
+                createdAt: Date.now(),
+                lastLogin: null
+            }).then(() => {
+                let link = `https://onedev12345678-tech.github.io/shope-cod/?reg_u=${encodeURIComponent(username)}&reg_p=${encodeURIComponent(password)}`;
+                navigator.clipboard.writeText(link);
+                showNotification('Link berhasil disalin!');
+                document.getElementById('buyerUsername').value = '';
+                document.getElementById('buyerPassword').value = '';
+                loadBuyers();
+            }).catch(e => showNotification('Error: ' + e.message, true));
+        });
+    }
+    
+    function loadBuyers() {
+        if (!db) return;
+        db.ref('registered_users').on('value', (snap) => {
+            allBuyers = snap.val() || {};
+            document.getElementById('statBuyer').textContent = Object.keys(allBuyers).length;
+            document.getElementById('buyerCount').textContent = Object.keys(allBuyers).length;
+            renderBuyers();
+        });
+    }
+    
+    function renderBuyers() {
+        let container = document.getElementById('buyerList');
+        let searchVal = document.getElementById('searchBuyer')?.value.toLowerCase() || '';
+        let keys = Object.keys(allBuyers).filter(u => u.includes(searchVal));
+        
+        if (keys.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-users"></i> Tidak ada buyer</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        keys.forEach(username => {
+            let b = allBuyers[username];
+            let now = Date.now();
+            let isExpired = now > b.expiry;
+            let div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `
+                <div class="item-info">
+                    <div class="item-name">${escapeHtml(username)}<span class="item-badge ${isExpired ? 'danger' : 'success'}">${isExpired ? 'EXPIRED' : 'AKTIF'}</span></div>
+                    <div class="item-detail"><i class="far fa-clock"></i> Expiry: ${formatDate(b.expiry)}</div>
+                </div>
+                <div class="action-menu">
+                    <button class="menu-dots" onclick="event.stopPropagation();toggleBuyerMenu(this, '${username}')"><i class="fas fa-ellipsis-v"></i></button>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" onclick="resetBuyerPass('${username}')"><i class="fas fa-key"></i> Reset Pass</div>
+                        <div class="dropdown-item danger" onclick="deleteBuyer('${username}')"><i class="fas fa-trash"></i> Hapus</div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+    
+    function toggleBuyerMenu(btn, username) {
+        let dropdown = btn.nextElementSibling;
+        document.querySelectorAll('.dropdown-menu').forEach(m => { if (m !== dropdown) m.classList.remove('show'); });
+        dropdown.classList.toggle('show');
+    }
+    
+    function resetBuyerPass(username) {
+        let newPass = prompt('Password baru untuk ' + username);
+        if (newPass && newPass.trim()) {
+            db.ref('registered_users/' + username).update({ password: newPass.trim() }).then(() => {
+                showNotification(`Password ${username} direset!`);
+                loadBuyers();
+            }).catch(e => showNotification('Error: ' + e.message, true));
+        }
+    }
+    
+    function deleteBuyer(username) {
+        if (confirm(`Hapus buyer ${username}?`)) {
+            db.ref('registered_users/' + username).remove().then(() => {
+                showNotification(`Buyer ${username} dihapus!`);
+                loadBuyers();
+            }).catch(e => showNotification('Error: ' + e.message, true));
+        }
+    }
+    
+    // ========== PHISHING DATA (Datphis_onx) ==========
+    function loadPhishing() {
+        if (!db) return;
+        db.ref('Datphis_onx').on('value', (snap) => {
+            let data = snap.val() || {};
+            let container = document.getElementById('phishingList');
+            let entries = Object.entries(data).sort((a,b) => b[1].timestamp - a[1].timestamp);
+            
+            if (entries.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i> Belum ada data phishing</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            entries.forEach(([id, item]) => {
+                let div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-name"><i class="fas fa-user"></i> ${escapeHtml(item.username || 'Unknown')}</div>
+                        <div class="item-detail"><i class="fas fa-envelope"></i> Email/Pass: ${escapeHtml(item.email || '-')}</div>
+                        <div class="item-detail"><i class="fas fa-globe"></i> IP: ${escapeHtml(item.ip || '-')} | ${formatDate(item.timestamp)}</div>
+                    </div>
+                    <button class="menu-dots" style="padding:8px; color:var(--danger);" onclick="deletePhishing('${id}')"><i class="fas fa-trash"></i></button>
+                `;
+                container.appendChild(div);
+            });
+        });
+    }
+    
+    function deletePhishing(id) {
+        if (confirm('Hapus data phishing ini?')) {
+            db.ref('Datphis_onx/' + id).remove();
+        }
+    }
+    
+    // ========== ANNOUNCEMENT (Ann_onx) ==========
+    function publishAnnouncement() {
+        let text = document.getElementById('announceText').value.trim();
+        let expiryInput = document.getElementById('announceExpiry').value;
+        if (!text) return showNotification('Teks pengumuman kosong!', true);
+        if (!expiryInput) return showNotification('Pilih waktu auto hapus!', true);
+        let expiry = new Date(expiryInput).getTime();
+        if (expiry <= Date.now()) return showNotification('Waktu harus di masa depan!', true);
+        
+        db.ref('Ann_onx').push({
+            text: text,
+            expireAt: expiry,
+            createdAt: Date.now(),
+            viewers: {}
+        }).then(() => {
+            showNotification('Pengumuman dipublikasikan!');
+            document.getElementById('announceText').value = '';
+            document.getElementById('announceExpiry').value = '';
+            loadAnnouncements();
+        }).catch(e => showNotification('Error: ' + e.message, true));
+    }
+    
+    function loadAnnouncements() {
+        if (!db) return;
+        db.ref('Ann_onx').on('value', (snap) => {
+            let data = snap.val() || {};
+            let now = Date.now();
+            let active = Object.entries(data).filter(([id, ann]) => ann.expireAt > now);
+            let container = document.getElementById('announceList');
+            
+            if (active.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i> Tidak ada pengumuman aktif</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            active.forEach(([id, ann]) => {
+                let div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `
+                    <div class="item-info">
+                        <div class="item-name"><i class="fas fa-bullhorn"></i> ${escapeHtml(ann.text)}</div>
+                        <div class="item-detail">Expired: ${formatDate(ann.expireAt)}</div>
+                    </div>
+                    <button class="menu-dots" style="padding:8px; color:var(--danger);" onclick="deleteAnnouncement('${id}')"><i class="fas fa-trash"></i></button>
+                `;
+                container.appendChild(div);
+            });
+        });
+    }
+    
+    function deleteAnnouncement(id) {
+        if (confirm('Hapus pengumuman ini?')) {
+            db.ref('Ann_onx/' + id).remove();
+        }
+    }
+    
+// ========== REPORT (Report_onx & Ansr_onx & user_replies) ==========
+let currentReportData = null;
+
+function loadReports() {
+    if (!db) return;
+    db.ref('Report_onx').on('value', (snap) => {
+        let data = snap.val() || {};
+        let entries = Object.entries(data).sort((a,b) => b[1].timestamp - a[1].timestamp);
+        let container = document.getElementById('reportList');
+        document.getElementById('statReport').textContent = entries.length;
+        
+        if (entries.length === 0) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i> Belum ada laporan</div>';
+            return;
+        }
+        
+        container.innerHTML = '';
+        entries.forEach(([id, report]) => {
+            let div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `
+                <div class="item-info">
+                    <div class="item-name"><i class="fas fa-user"></i> ${escapeHtml(report.username)}</div>
+                    <div class="item-detail"><strong>Pesan:</strong> ${escapeHtml(report.message)}</div>
+                    <div class="item-detail"><i class="far fa-clock"></i> ${formatDate(report.timestamp)}</div>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <button class="menu-dots" style="color:var(--accent);" onclick="openReplyModal('${id}', '${escapeHtml(report.username)}', '${escapeHtml(report.message)}')"><i class="fas fa-reply"></i></button>
+                    <button class="menu-dots" style="color:var(--danger);" onclick="deleteReport('${id}')"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    });
+}
+
+function openReplyModal(reportId, username, message) {
+    currentReportId = reportId;
+    currentReportData = { username: username, message: message };
+    document.getElementById('modalReportReply').style.display = 'flex';
+    document.getElementById('replyMessage').value = '';
+    document.getElementById('replyMessage').focus();
+}
+
+function sendReply() {
+    if (!currentReportId || !currentReportData) {
+        showNotification('Error: Data laporan tidak ditemukan!', true);
+        return;
+    }
+    
+    let message = document.getElementById('replyMessage').value.trim();
+    if (!message) {
+        showNotification('Pesan balasan kosong!', true);
+        return;
+    }
+    
+    const targetUsername = currentReportData.username;
+    const adminName = 'ONX Owner';
+    const replyId = Date.now().toString();
+    
+    console.log('Mengirim balasan ke:', targetUsername);
+    console.log('Pesan:', message);
+    
+    // 1. SIMPAN KE Ansr_onx (riwayat di owner panel)
+    db.ref('Ansr_onx/' + currentReportId).push({
+        message: message,
+        admin: adminName,
+        timestamp: Date.now()
+    }).then(() => {
+        console.log('Balasan tersimpan di Ansr_onx');
+        
+        // 2. SIMPAN KE user_replies/{username} AGAR MASUK INBOX BUYER
+        return db.ref(`Ansr_onx/${targetUsername}/${replyId}`).set({
+            message: message,
+            adminName: adminName,
+            timestamp: Date.now(),
+            read: false,
+            reportId: currentReportId,
+            note: ''
+        });
+    }).then(() => {
+        console.log('Balasan tersimpan di user_replies/' + targetUsername);
+        
+        // 3. UPDATE status report (opsional)
+        db.ref('Report_onx/' + currentReportId).update({
+            status: 'replied',
+            repliedAt: Date.now(),
+            repliedBy: 'owner'
+        }).catch(e => console.log('Update status gagal:', e));
+        
+        showNotification(`✓ Balasan terkirim ke ${targetUsername}!`);
+        document.getElementById('replyMessage').value = '';
+        closeReportModal();
+        
+        // Refresh list report (optional)
+        loadReports();
+        
+    }).catch((e) => {
+        console.error('Error lengkap:', e);
+        showNotification('Gagal kirim: ' + e.message, true);
+    });
+}
+
+function closeReportModal() {
+    document.getElementById('modalReportReply').style.display = 'none';
+    currentReportId = null;
+    currentReportData = null;
+}
+
+function deleteReport(id) {
+    if (!confirm('Hapus laporan ini?')) return;
+    
+    // Ambil username dari report
+    db.ref('Report_onx/' + id).once('value').then((snap) => {
+        const report = snap.val();
+        if (report && report.username) {
+            // Hapus dari user_replies buyer
+            db.ref(`user_replies/${report.username}`).once('value').then((repliesSnap) => {
+                const replies = repliesSnap.val() || {};
+                Object.entries(replies).forEach(([replyId, reply]) => {
+                    if (reply.reportId === id) {
+                        db.ref(`user_replies/${report.username}/${replyId}`).remove();
+                        console.log('Hapus reply di user_replies:', replyId);
+                    }
+                });
+            });
+        }
+    });
+    
+    // Hapus dari Report_onx dan Ansr_onx
+    db.ref('Report_onx/' + id).remove();
+    db.ref('Ansr_onx/' + id).remove();
+    showNotification('Laporan dihapus!');
+}
+    
+    function closeReportModal() {
+        document.getElementById('modalReportReply').style.display = 'none';
+        currentReportId = null;
+    }
+    
+    // ========== NAVIGATION ==========
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            let tabId = btn.getAttribute('data-tab');
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active-pane'));
+            document.getElementById(tabId).classList.add('active-pane');
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+    
+    // ========== SEARCH LISTENERS ==========
+    document.getElementById('searchReseller')?.addEventListener('input', () => renderResellers());
+    document.getElementById('searchBuyer')?.addEventListener('input', () => renderBuyers());
+    
+    // ========== INIT ==========
+    if (typeof db !== 'undefined' && db) {
+        loadServerStatus();
+        loadResellers();
+        loadBuyers();
+        loadPhishing();
+        loadAnnouncements();
+        loadReports();
+        
+        setInterval(() => {
+            if (db) {
+                db.ref('Reseller_onx').once('value');
+                db.ref('registered_users').once('value');
+            }
+        }, 30000);
+    } else {
+        console.error('Firebase not ready!');
+    }
+</script>
+</body>
+</html>
